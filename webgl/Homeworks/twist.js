@@ -2,9 +2,10 @@
 
 var canvas;
 var gl;
-var vBufferId;
+var thetaLoc;
 
 var numTimesToSubdivide = 0;
+var angle = 0;
 
 var points = [];
 
@@ -17,8 +18,8 @@ window.onload = function init()
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
-    
-    points = [vec2(-1, -1), vec2(0,1), vec2(1,-1)];
+
+    generateVertices();
 
     gl.enable(gl.DEPTH_TEST);
 
@@ -28,21 +29,25 @@ window.onload = function init()
     var program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
 
-    vBufferId = gl.createBuffer();
+    var vBufferId = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
-    //gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
 
     var vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
-    
-    var thetaLoc = gl.getUniformLocation(program, "theta");
-    gl.uniform1f(thetaLoc, 30);
+
+    thetaLoc = gl.getUniformLocation(program, "theta");
 
     //event listeners for slider
 
-    document.getElementById( "slider" ).onchange = function () {
-        numTimesToSubdivide = event.srcElement.value;
+    document.getElementById( "steps" ).onchange = function () {
+      numTimesToSubdivide = event.srcElement.value;
+      generateVertices();
+      render();
+    };
+
+    document.getElementById( "angle" ).onchange = function () {
+        angle = event.srcElement.value;
         render();
     };
 
@@ -52,25 +57,28 @@ window.onload = function init()
 function generateVertices()
 {
     points = [];
-    var vertices = [vec2(-0.5, -0.5), vec2(0,0.5), vec2(0.5,-0.5)];
+    var vertices = [vec2(-0.5*Math.cos(Math.PI/6), -0.5*Math.sin(Math.PI/6)),
+      vec2(0,0.5),
+      vec2(0.5*Math.cos(Math.PI/6),-0.5*Math.sin(Math.PI/6))];
     subDivide(vertices[0], vertices[1], vertices[2], numTimesToSubdivide);
 }
 
 function subDivide(a, b, c, iterations)
 {
-    points.push(a);
-    points.push(b);
-    points.push(c);
-    
     if(iterations == 0)
-        return;
-        
+    {
+      points.push(a);
+      points.push(b);
+      points.push(c);
+      return;
+    }
+
     iterations--;
     var ab = mix(a, b, 0.5);
     var ac = mix(a, c, 0.5);
     var bc = mix(b, c, 0.5);
     subDivide(a, ab, ac, iterations);
-    subDivide(ab, b, c, iterations);
+    subDivide(ab, b, bc, iterations);
     subDivide(ac, bc, c, iterations);
     subDivide(bc, ac, ab, iterations);
 }
@@ -79,9 +87,11 @@ function render()
 {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    generateVertices();
-    
+    // angle+=1;
+    gl.uniform1f(thetaLoc, angle);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
 
     gl.drawArrays( gl.TRIANGLES, 0, points.length );
+
+    // requestAnimFrame(render);
 }

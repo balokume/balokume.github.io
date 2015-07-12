@@ -5,25 +5,19 @@
 attribute  vec4 vPosition;
 uniform float theta;
 
-void main() 
+void main()
 {
-
-    float s = sin( radians( theta ) );
-    float c = cos( radians( theta ) );
-    
     float d = sqrt(vPosition.x*vPosition.x + vPosition.y*vPosition.y);
+    float radian = radians( d * theta );
+    float s = sin( radian );
+    float c = cos( radian );
 
-    gl_Position.x = (-s * vPosition.x + c * vPosition.y) * d;
-    gl_Position.y = ( s * vPosition.y + c * vPosition.x) * d;
+    gl_Position.x = vPosition.x * c - vPosition.y * s;
+    gl_Position.y = vPosition.x * s + vPosition.y * c;
+
     gl_Position.z = 0.0;
     gl_Position.w = 1.0;
-    
-    //float radian = radians( theta );
-   // gl_Position.x = vPosition.x * cos(radian) - vPosition.y * sin(radian);
-    //gl_Position.y = vPosition.x * sin(radian) + vPosition.y * cos(radian);
-    
-   // gl_Position = vPosition;
-} 
+}
 
 
 </script>
@@ -45,9 +39,15 @@ void main()
 
 <body>
     <div>
-recursive steps  0 <input id="slider" type="range"
+recursive steps:  0 <input id="steps" type="range"
  min="0" max="5" step="1" value="0" />
  5
+</div>
+
+<div>
+twist angle: 0 <input id="angle" type="range"
+min="0" max="360" step="10" value="0" />
+360
 </div>
 
 <br/>
