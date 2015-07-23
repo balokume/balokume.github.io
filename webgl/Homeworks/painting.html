@@ -1,0 +1,81 @@
+<html>
+
+<script id="texture-vertex-shader" type="x-shader/x-vertex">
+
+attribute vec4 vPosition;
+
+attribute vec2 vTexCoord;
+varying vec2 fTexCoord;
+
+void main()
+{
+    gl_Position = vPosition;
+
+    fTexCoord = vTexCoord;
+}
+
+
+</script>
+
+<script id="texture-fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+uniform sampler2D tex;
+varying vec2 fTexCoord;
+
+void main()
+{
+    gl_FragColor = texture2D(tex, fTexCoord);
+}
+</script>
+
+<script id="paint-vertex-shader" type="x-shader/x-vertex">
+
+attribute vec4 vPosition;
+attribute vec4 vColor;
+
+varying vec4 fColor;
+
+void main()
+{
+    gl_Position = vPosition;
+    fColor = vColor;
+}
+
+
+</script>
+
+<script id="paint-fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+varying vec4 fColor;
+
+void main()
+{
+    gl_FragColor = fColor;
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="painting.js"></script>
+
+<body>
+    <div>
+recursive steps  0 <input id="slider" type="range"
+ min="0" max="5" step="1" value="0" />
+ 5
+</div>
+
+<br/>
+
+<canvas id="gl-canvas" width="512"" height="512" style="margin-left:100px">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+
+</body>
+</html>
