@@ -17,6 +17,12 @@ var texVertBuffer;
 var texUVBuffer;
 var lineVertBuffer;
 
+var color = vec3(0,0,0);
+
+var lineWidth = 2;
+var prevC;
+var prevB;
+
 window.onload = function init()
 {
     canvas = document.getElementById( "gl-canvas" );
@@ -39,15 +45,30 @@ window.onload = function init()
 
     lineVertBuffer = gl.createBuffer();
 
-    //event listeners for slider
-
-    document.getElementById( "slider" ).onchange = function (event) {
-        console.log(event.srcElement.value);
-    };
+    //event listeners
+    document.getElementById("colorpicker").onchange = function()
+    {
+      color = hexToRgb(event.srcElement.value);
+    }
+    document.getElementById("width").onchange = function()
+    {
+      lineWidth = event.srcElement.value;
+    }
 
     canvas.addEventListener("mousedown", onMouseDown);
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("mouseup", onMouseUp);
+}
+
+function hexToRgb(hex) {
+    hex = hex.replace(/[^0-9A-F]/gi, '');
+    var bigint = parseInt(hex, 16);
+
+    var r = (bigint >> 16) & 255;
+    var g = (bigint >> 8) & 255;
+    var b = bigint & 255;
+
+    return vec3(r/255,g/255,b/255);
 }
 
 function createFrameBuffer()
@@ -92,11 +113,10 @@ function drawToBuffer()
   gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
   gl.enableVertexAttribArray( vPosition );
 
-  var vColor = gl.getAttribLocation( paintProgram, "vColor" );
-  gl.vertexAttribPointer( vColor, 2, gl.FLOAT, false, 0, 0 );
-  gl.enableVertexAttribArray( vColor );
+  var vColor = gl.getUniformLocation( paintProgram, "color" );
+  gl.uniform3fv(vColor, flatten(color));
 
-  gl.drawArrays(gl.LINES, 0, 2);
+  //gl.drawArrays(gl.LINES, 0, 2);
 }
 
 function drawToCanvas()
@@ -149,13 +169,19 @@ function onMouseMove(event)
     return;
 
   var curPos = getMousePosition(event);
-  drawLine(curPos);
+  //drawLine(curPos);
+  drawPolygen(curPos);
+
   prevPos = curPos;
+  prevB = b;
+  prevC = c;
 }
 
 function onMouseUp()
 {
   mouseDown = false;
+  prevC = null;
+  prevB = null;
 }
 
 function getMousePosition(event)
@@ -174,5 +200,78 @@ function drawLine(curPos)
   gl.bufferData(gl.ARRAY_BUFFER, flatten([prevPos, curPos]), gl.STATIC_DRAW);
 
   drawToBuffer();
+  gl.drawArrays(gl.LINES, 0, 2);
+
   drawToCanvas();
+}
+
+function drawPolygen(curPos)
+{
+  var line = subtract(curPos, prevPos);
+  var len = length(line);
+  if(len == 0)
+    return;
+  var cos = line[0] / len;
+  var sin = line[1] / len;
+
+  /*************
+  d----c
+  |    |
+  a----b
+  *************/
+  var a = vec2(0, -lineWidth/2/canvas.height);
+  var b = vec2(len, -lineWidth/2/canvas.height);
+  var c = vec2(len, lineWidth/2/canvas.height);
+  var d = vec2(0, lineWidth/2/canvas.height);
+
+  var rot = [
+       [cos, -sin] ,
+       [sin, cos]
+  ];
+
+  // rotate
+  a = mul(rot, a);
+  b = mul(rot, b);
+  c = mul(rot, c);
+  d = mul(rot, d);
+
+  // translate
+  a = add(a, prevPos);
+  b = add(b, prevPos);
+  c = add(c, prevPos);
+  d = add(d, prevPos);
+
+  // build polygen
+  var points = [];
+  if(prevC != null)
+  {
+    points.push(prevB);
+    points.push(a);
+    points.push(d);
+    points.push(d);
+    points.push(prevC);
+    points.push(prevB);
+  }
+  points.push(a);
+  points.push(b);
+  points.push(c);
+  points.push(c);
+  points.push(d);
+  points.push(a);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, lineVertBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
+
+  drawToBuffer();
+  gl.drawArrays(gl.TRIANGLES, 0, points.length);
+
+  drawToCanvas();
+}
+
+function mul(m, v)
+{
+  var res = vec2(
+    m[0][0] * v[0] + m[0][1] * v[1],
+    m[1][0] * v[0] + m[1][1] * v[1]);
+  return res;
 }

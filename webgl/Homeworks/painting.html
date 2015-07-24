@@ -13,8 +13,6 @@ void main()
 
     fTexCoord = vTexCoord;
 }
-
-
 </script>
 
 <script id="texture-fragment-shader" type="x-shader/x-fragment">
@@ -33,28 +31,20 @@ void main()
 <script id="paint-vertex-shader" type="x-shader/x-vertex">
 
 attribute vec4 vPosition;
-attribute vec4 vColor;
-
-varying vec4 fColor;
 
 void main()
 {
     gl_Position = vPosition;
-    fColor = vColor;
 }
-
-
 </script>
 
 <script id="paint-fragment-shader" type="x-shader/x-fragment">
 
 precision mediump float;
-
-varying vec4 fColor;
-
+uniform vec3 color;
 void main()
 {
-    gl_FragColor = fColor;
+    gl_FragColor = vec4(color,1);
 }
 </script>
 
@@ -64,15 +54,18 @@ void main()
 <script type="text/javascript" src="painting.js"></script>
 
 <body>
-    <div>
-recursive steps  0 <input id="slider" type="range"
- min="0" max="5" step="1" value="0" />
- 5
+<div>
+<label for="colorpicker">choose line color </label>
+<input id="colorpicker" type="color"/>
+<br/>
+line width 2 <input id="width" type="range"
+ min="2" max="20" step="1" value="1" />
+20
 </div>
 
 <br/>
 
-<canvas id="gl-canvas" width="512"" height="512" style="margin-left:100px">
+<canvas id="gl-canvas" width="512"" height="512" style="margin-left:10px">
 Oops ... your browser doesn't support the HTML5 canvas element
 </canvas>
 
