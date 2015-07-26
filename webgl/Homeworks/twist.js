@@ -4,6 +4,7 @@ var canvas;
 var gl;
 var thetaLoc;
 
+var numVertices = 3;
 var numTimesToSubdivide = 0;
 var angle = 0;
 
@@ -39,6 +40,11 @@ window.onload = function init()
     thetaLoc = gl.getUniformLocation(program, "theta");
 
     //event listeners for slider
+    document.getElementById( "vertices" ).onchange = function () {
+      numVertices = event.srcElement.value;
+      generateVertices();
+      render();
+    };
 
     document.getElementById( "steps" ).onchange = function () {
       numTimesToSubdivide = event.srcElement.value;
@@ -57,10 +63,17 @@ window.onload = function init()
 function generateVertices()
 {
     points = [];
-    var vertices = [vec2(-0.5*Math.cos(Math.PI/6), -0.5*Math.sin(Math.PI/6)),
-      vec2(0,0.5),
-      vec2(0.5*Math.cos(Math.PI/6),-0.5*Math.sin(Math.PI/6))];
-    subDivide(vertices[0], vertices[1], vertices[2], numTimesToSubdivide);
+
+    var vertices = [vec2(0,0)];
+    var theta = Math.PI*2 / numVertices;
+    for(var i = 0; i < numVertices; i++)
+    {
+      vertices.push(vec2(0.5*Math.cos(theta * i), 0.5*Math.sin(theta * i)));
+    }
+    for(var i = 1; i < vertices.length; i++)
+    {
+      subDivide(vertices[0], vertices[i], vertices[i%(vertices.length-1)+1], numTimesToSubdivide);
+    }
 }
 
 function subDivide(a, b, c, iterations)
