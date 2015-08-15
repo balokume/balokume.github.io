@@ -1,0 +1,64 @@
+<html>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+attribute vec4 vPosition;
+
+uniform mat4 mvp;
+
+void main()
+{
+    gl_Position = mvp * vPosition;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+uniform vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="cad.js"></script>
+
+<body>
+<div>
+<p>
+<button id="cone">Cone</button>
+<button id="cylinder">Cylinder</button>
+<button id="sphere">Sphere</button>
+</p>
+position:
+<button id="pxminus">-</button>x<button id="pxplus">+</button>
+<button id="pyminus">-</button>y<button id="pyplus">+</button>
+<button id="pzminus">-</button>z<button id="pzplus">+</button>
+<br/>
+rotation:
+<button id="rxminus">-</button>x<button id="rxplus">+</button>
+<button id="ryminus">-</button>y<button id="ryplus">+</button>
+<button id="rzminus">-</button>z<button id="rzplus">+</button>
+<br/>
+scale:
+<button id="sxminus">-</button>x<button id="sxplus">+</button>
+<button id="syminus">-</button>y<button id="syplus">+</button>
+<button id="szminus">-</button>z<button id="szplus">+</button>
+<br/>
+</div>
+
+<br/>
+
+<canvas id="gl-canvas" width="512"" height="512" style="margin-left:10px">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+
+</body>
+</html>
