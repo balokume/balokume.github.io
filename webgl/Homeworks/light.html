@@ -1,0 +1,131 @@
+<html>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+attribute vec3 vPosition;
+attribute vec3 vNormal;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 proj;
+
+#define lightCount 2
+uniform vec4 lightPos[lightCount];
+uniform float isPointLight[lightCount];
+
+varying vec3 N, E;
+// light direction
+varying vec3 L[lightCount];
+// distance from light to vertex
+varying float d[lightCount];
+
+void main()
+{
+  vec3 eye_pos = (view * model * vec4(vPosition,1.0)).xyz;
+  E = -normalize(eye_pos);
+
+  for(int i = 0; i < lightCount; i++)
+  {
+    // directional light
+    if(isPointLight[i] == 0.0)
+    {
+      L[i] = normalize((view * lightPos[i]).xyz);
+      d[i] = -1.0;
+    }
+    // point light
+    else
+    {
+      L[i] = (view * lightPos[i]).xyz - eye_pos;
+      d[i] = length(L[i]);
+      L[i] = normalize(L[i]);
+    }
+  }
+
+  N = normalize((view * model * vec4(vNormal, 0.0)).xyz);
+
+  gl_Position = proj * view * model * vec4(vPosition,1.0);
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+#define lightCount 2
+
+varying vec3 N, E;
+varying vec3 L[lightCount];
+varying float d[lightCount];
+
+uniform vec4 ambient[lightCount];
+uniform vec4 diffuse[lightCount];
+uniform vec4 specular[lightCount];
+
+uniform float shiness;
+uniform float power;
+
+void main()
+{
+  vec4 color = vec4(0,0,0,1);
+
+  vec3 n = normalize(N);
+  vec3 e = normalize(E);
+
+  // calculate color for each light
+  for(int i = 0; i < lightCount; i++)
+  {
+    vec3 l = normalize(L[i]);
+
+    vec3 h = normalize(l + e);
+
+    float Kd = max(dot(l, n), 0.0);
+
+    float Ks = pow(max(dot(h, e), 0.0), shiness);
+    if(dot(l, n) < 0.0)
+      Ks = 0.0;
+
+    color += ambient[i] + diffuse[i] * Kd + specular[i] * Ks;
+
+    // if point light, apply attenuation
+    if(d[i] > 0.0)
+    {
+      color = color / (2.0 + 0.8*d[i] + 0.7*d[i] * d[i]) * power;
+    }
+  }
+
+  color.a = 1.0;
+  gl_FragColor = color;
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="light.js"></script>
+
+<body>
+<div>
+<p>
+Point Light:&nbsp;
+On:<input type="checkbox" id="switch1" checked="true"/>&nbsp;&nbsp;
+Rotate:<input type="checkbox" id="rotate1" checked="true"/>&nbsp;&nbsp;
+Radius: 5<input type="range" id="radius1" min="5" max="15" step="1" value="10"/>15&nbsp;&nbsp;
+Power: 10<input type="range" id="power" min="10" max="100" step="5" value="55"/>70
+</p>
+<p>
+Directional Light:&nbsp;
+On:<input type="checkbox" id="switch2" checked="true"/>&nbsp;&nbsp;
+Rotate:<input type="checkbox" id="rotate2" checked="true"/>&nbsp;&nbsp;
+Radius: 5<input type="range" id="radius2" min="5" max="15" step="1" value="10"/>15&nbsp;&nbsp;
+</p>
+</div>
+
+<br/>
+
+<canvas id="gl-canvas" width="512"" height="512" style="margin-left:10px">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+
+</body>
+</html>

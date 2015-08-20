@@ -213,8 +213,8 @@ function generateCylinder()
   for(var i = 0; i < bottomVertCount; i++)
   {
     var theta = Math.PI * 2 / bottomVertCount * i;
-    topVerts.push(vec3(0.5*Math.cos(theta), 0.5, 0.5*Math.sin(theta)));
-    bottomVerts.push(vec3(0.5*Math.cos(theta), -0.5, 0.5*Math.sin(theta)));
+    topVerts.push(vec3(0.5*Math.cos(theta), 0.5, -0.5*Math.sin(theta)));
+    bottomVerts.push(vec3(0.5*Math.cos(theta), -0.5, -0.5*Math.sin(theta)));
   }
 
   // push vertices
