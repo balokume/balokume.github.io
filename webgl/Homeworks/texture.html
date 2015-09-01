@@ -1,0 +1,141 @@
+<html>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+attribute vec3 vPosition;
+attribute vec3 vNormal;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 proj;
+
+uniform vec4 lightPos;
+varying vec3 N, E;
+// light direction
+varying vec3 L;
+// distance from light to vertex
+varying float d;
+
+varying vec2 uv;
+
+uniform float uvType;
+
+void main()
+{
+  vec3 eye_pos = (view * model * vec4(vPosition,1.0)).xyz;
+  E = -normalize(eye_pos);
+
+  // directional light
+  if(lightPos.w == 0.0)
+  {
+    L = normalize((view * lightPos).xyz);
+    d = -1.0;
+  }
+  // point light
+  else
+  {
+    L = (view * lightPos).xyz - eye_pos;
+    d = length(L);
+    L = normalize(L);
+  }
+
+  N = normalize((view * model * vec4(vNormal, 0.0)).xyz);
+
+  float pi = acos(-1.0);
+  if(uvType == 0.0)
+  {
+    uv.x = acos(vPosition.x)/pi;
+    uv.y = asin(vPosition.y/sqrt(1.0-vPosition.x*vPosition.x))/pi + 0.5;
+  }
+  else {
+    uv.x = 0.5 + atan(vPosition.z/vPosition.x) / pi;
+    uv.y = 0.5 - asin(vPosition.y) / pi;
+  }
+
+  gl_Position = proj * view * model * vec4(vPosition,1.0);
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+varying vec3 N, E;
+varying vec3 L;
+varying float d;
+
+uniform vec4 ambient;
+uniform vec4 diffuse;
+uniform vec4 specular;
+
+uniform float shininess;
+uniform float power;
+
+uniform sampler2D texture;
+varying vec2 uv;
+
+void main()
+{
+  vec4 color = vec4(0,0,0,1);
+
+  vec3 n = normalize(N);
+  vec3 e = normalize(E);
+
+  // calculate color for each light
+  vec3 l = normalize(L);
+
+  vec3 h = normalize(l + e);
+
+  float Kd = max(dot(l, n), 0.0);
+
+  float Ks = pow(max(dot(h, e), 0.0), shininess);
+  if(dot(l, n) < 0.0)
+    Ks = 0.0;
+
+  color += ambient + diffuse * Kd + specular * Ks;
+
+  // if point light, apply attenuation
+  if(d > 0.0)
+  {
+    color = color / (2.0 + 0.8*d + 0.7*d * d) * power;
+  }
+
+  color *= texture2D(texture, uv);
+  color.a = 1.0;
+  gl_FragColor = color;
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="texture.js"></script>
+
+<body>
+<div>
+  rotation:
+
+  <br/>x: -90 <input id="rx" type="range" value="0" min="-90" max="90" step="5"/> 90
+  <br/>y: -90 <input id="ry" type="range" value="0" min="-90" max="90" step="5"/> 90
+  <br/>z: -90 <input id="rz" type="range" value="0" min="-90" max="90" step="5"/> 90
+
+  <br/>
+  <select id = "texSelect" size = "2">
+    <option value = "1">Chess Board</option>
+    <option value = "2">Image</option>
+  </select>
+  <select id = "uvSelect" size = "2">
+    <option value = "1">UV Type 1</option>
+    <option value = "2">UV Type 2</option>
+  </select>
+</div>
+
+<br/>
+
+<canvas id="gl-canvas" width="512"" height="512" style="margin-left:10px">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+
+</body>
+</html>
